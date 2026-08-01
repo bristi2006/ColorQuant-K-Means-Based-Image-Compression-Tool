@@ -9,6 +9,7 @@ import streamlit as st
 from kmeans import compress_image, kmeans
 from utils import (
     array_to_pil,
+    candidate_output_formats,
     encode_image,
     file_size_to_string,
     load_uploaded_image,
@@ -195,6 +196,8 @@ def process_image(
     jpeg_quality: int,
     png_compression_level: int,
     optimize_output: bool,
+    auto_minimize_size: bool,
+    has_transparency: bool,
 ):
     working_image, was_resized = resize_image(original_image, max_dimension)
     working_array = pil_to_array(working_image)
@@ -211,13 +214,26 @@ def process_image(
     )
     compressed_array = compress_image(labels, centroids)
     compressed_image = array_to_pil(compressed_array)
-    compressed_bytes = encode_image(
-        compressed_image,
-        output_format,
-        quality=jpeg_quality,
-        png_compression_level=png_compression_level,
-        optimize=optimize_output,
-    )
+    candidate_formats = candidate_output_formats(output_format, has_transparency)
+    if auto_minimize_size:
+        candidate_formats = candidate_formats + [fmt for fmt in ["JPEG", "PNG"] if fmt not in candidate_formats]
+
+    encoded_candidates: list[tuple[str, bytes]] = []
+    for candidate_format in candidate_formats:
+        encoded_candidates.append(
+            (
+                candidate_format,
+                encode_image(
+                    compressed_image,
+                    candidate_format,
+                    quality=jpeg_quality,
+                    png_compression_level=png_compression_level,
+                    optimize=optimize_output,
+                ),
+            )
+        )
+
+    selected_format, compressed_bytes = min(encoded_candidates, key=lambda item: len(item[1]))
     elapsed_seconds = time.perf_counter() - start_time
 
     original_size_bytes = len(original_bytes)
@@ -239,6 +255,8 @@ def process_image(
         "converged": run_info["converged"],
         "was_resized": was_resized,
         "effective_k": effective_k,
+        "selected_format": selected_format,
+        "auto_minimize_size": auto_minimize_size,
     }
 
     return {
@@ -246,12 +264,13 @@ def process_image(
         "compressed_image": compressed_image,
         "compressed_bytes": compressed_bytes,
         "metrics": metrics,
-        "download_name": build_download_name(uploaded_name, output_format),
+        "download_name": build_download_name(uploaded_name, selected_format),
     }
 
 
 def render_results(result, *, output_format: str, optimize_output: bool, has_transparency: bool) -> None:
     metrics = result["metrics"]
+    selected_format = metrics["selected_format"]
 
     if metrics["was_resized"]:
         st.info(
@@ -260,6 +279,11 @@ def render_results(result, *, output_format: str, optimize_output: bool, has_tra
 
     if has_transparency:
         st.info("Transparency was flattened onto a white background before RGB processing.")
+
+    if selected_format != output_format:
+        st.success(
+            f"The selected {output_format} output would have been larger, so the app automatically used {selected_format} to keep the file smaller."
+        )
 
     original_col, compressed_col = st.columns(2)
     with original_col:
@@ -275,7 +299,7 @@ def render_results(result, *, output_format: str, optimize_output: bool, has_tra
         st.markdown('<div class="panel">', unsafe_allow_html=True)
         st.markdown('<div class="section-title">Compressed output</div>', unsafe_allow_html=True)
         st.caption(
-            f"{format_dimensions(metrics['working_dimensions'])} · {output_format} · {file_size_to_string(metrics['compressed_size_bytes'])}"
+            f"{format_dimensions(metrics['working_dimensions'])} · {selected_format} · {file_size_to_string(metrics['compressed_size_bytes'])}"
         )
         st.image(result["compressed_image"], use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
@@ -307,15 +331,15 @@ def render_results(result, *, output_format: str, optimize_output: bool, has_tra
     with metric_row_3[1]:
         st.metric("Unique colors out", f"{metrics['compressed_colors']:,}")
     with metric_row_3[2]:
-        st.metric("Effective K", str(metrics["effective_k"]))
+        st.metric("Output format", selected_format)
     with metric_row_3[3]:
-        st.metric("Optimize flag", "On" if optimize_output else "Off")
+        st.metric("Effective K", str(metrics["effective_k"]))
 
     st.download_button(
         "Download compressed image",
         data=result["compressed_bytes"],
         file_name=result["download_name"],
-        mime="image/jpeg" if output_format == "JPEG" else "image/png",
+        mime="image/jpeg" if selected_format == "JPEG" else "image/png",
         use_container_width=True,
     )
 
@@ -350,6 +374,11 @@ def main() -> None:
         )
         output_format = st.selectbox("Output format", options=["PNG", "JPEG"], index=0)
         optimize_output = st.checkbox("Optimize output file", value=True)
+        auto_minimize_size = st.checkbox(
+            "Automatically choose the smaller valid output",
+            value=True,
+            help="If your selected format would increase file size, the app will try the other supported format and keep the smaller result.",
+        )
 
         if output_format == "JPEG":
             jpeg_quality = st.slider("JPEG quality", min_value=40, max_value=95, value=85, step=1)
@@ -380,6 +409,7 @@ def main() -> None:
             "max_dimension": max_dimension,
             "output_format": output_format,
             "optimize_output": optimize_output,
+            "auto_minimize_size": auto_minimize_size,
             "jpeg_quality": jpeg_quality,
             "png_compression_level": png_compression_level,
         },
@@ -409,6 +439,8 @@ def main() -> None:
                 jpeg_quality=jpeg_quality,
                 png_compression_level=png_compression_level,
                 optimize_output=optimize_output,
+                auto_minimize_size=auto_minimize_size,
+                has_transparency=has_transparency,
             )
             st.session_state["compression_result"] = result
             st.session_state["compression_signature"] = signature

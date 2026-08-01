@@ -117,6 +117,25 @@ def encode_image(
     return buffer.getvalue()
 
 
+def candidate_output_formats(preferred_format: str, has_transparency: bool) -> list[str]:
+    """Return output formats to test, starting with the preferred format."""
+    normalized_preferred = _normalize_format(preferred_format)
+
+    if normalized_preferred == "PNG":
+        candidates = ["PNG"]
+        if not has_transparency:
+            candidates.append("JPEG")
+        return candidates
+
+    if normalized_preferred == "JPEG":
+        candidates = ["JPEG"]
+        if has_transparency:
+            candidates.append("PNG")
+        return candidates
+
+    return [normalized_preferred]
+
+
 def file_size_to_string(size_bytes: int) -> str:
     """Format a byte size using a human-readable unit."""
     if size_bytes < 1024:
