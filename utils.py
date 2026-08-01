@@ -2,65 +2,88 @@
 
 from __future__ import annotations
 
-from io import BytesIO
-from pathlib import Path
-
-import matplotlib.pyplot as plt
+import io
+import os
 import numpy as np
 from PIL import Image
+from kmeans import init_centroids, assign_clusters, update_centroids
 
 
-def _normalize_format(image_format: str | None, fallback_name: str | None = None) -> str:
-    """Return a Pillow-compatible image format string."""
-    if image_format:
-        normalized = image_format.upper()
-    elif fallback_name:
-        normalized = Path(fallback_name).suffix.lstrip(".").upper()
-    else:
-        normalized = "PNG"
-
-    if normalized == "JPG":
+def _normalize_format(output_format: str) -> str:
+    """Normalize the image format string for Pillow compatibility."""
+    normalized = output_format.strip().upper()
+    if normalized in ["JPG", "JPEG"]:
         return "JPEG"
+    return normalized
 
-    return normalized or "PNG"
 
+def load_image(source) -> tuple[Image.Image, bytes, str, bool]:
+    """
+    Loads an image from an uploaded file (file-like object), path, or bytes.
+    Validates that the image is not corrupted and converts transparency/grayscale to RGB.
+    
+    Returns:
+        - PIL.Image: Standardized image in RGB mode
+        - bytes: The original uncompressed image bytes
+        - str: Source format (e.g., 'PNG', 'JPEG', 'WEBP')
+        - bool: True if the original image had a transparency layer (alpha)
+    """
+    if hasattr(source, "getvalue"):
+        original_bytes = source.getvalue()
+    elif hasattr(source, "read"):
+        original_bytes = source.read()
+    elif isinstance(source, bytes):
+        original_bytes = source
+    else:
+        # Assume it's a file path
+        with open(source, "rb") as f:
+            original_bytes = f.read()
 
-def _ensure_rgb(image: Image.Image) -> Image.Image:
-    """Convert an image to RGB while flattening transparency onto white."""
-    if image.mode == "RGB":
-        return image.copy()
+    if not original_bytes:
+        raise ValueError("Uploaded file is empty.")
 
-    if "A" in image.getbands():
+    try:
+        image = Image.open(io.BytesIO(original_bytes))
+        image.load()  # Verify we can load the image data to detect corruption
+    except Exception as e:
+        raise ValueError(f"Failed to load image. The file may be corrupted or is in an unsupported format. Details: {e}")
+
+    source_format = _normalize_format(image.format or "PNG")
+    
+    # Check for transparency
+    has_transparency = "A" in image.getbands() or (image.mode == "P" and "transparency" in image.info)
+
+    # Flatten transparency onto white background or convert grayscale to RGB
+    if has_transparency:
         rgba_image = image.convert("RGBA")
         background = Image.new("RGBA", rgba_image.size, (255, 255, 255, 255))
         background.alpha_composite(rgba_image)
-        return background.convert("RGB")
+        rgb_image = background.convert("RGB")
+    else:
+        rgb_image = image.convert("RGB")
 
-    return image.convert("RGB")
-
-
-def load_uploaded_image(uploaded_file):
-    """Load an uploaded file into a Pillow image, raw bytes, and source format."""
-    image_bytes = uploaded_file.getvalue()
-
-    with Image.open(BytesIO(image_bytes)) as image:
-        image.load()
-        source_format = _normalize_format(image.format, getattr(uploaded_file, "name", None))
-        has_transparency = "A" in image.getbands()
-        rgb_image = _ensure_rgb(image)
-
-    return rgb_image, image_bytes, source_format, has_transparency
+    return rgb_image, original_bytes, source_format, has_transparency
 
 
-def resize_image(image: Image.Image, max_dimension: int):
-    """Resize an image to fit within max_dimension while preserving aspect ratio."""
-    width, height = image.size
-    largest_dimension = max(width, height)
-
-    if largest_dimension <= max_dimension:
+def resize_image(image: Image.Image, enabled: bool, max_dimension: int) -> tuple[Image.Image, bool]:
+    """
+    Resizes an image so that its longest dimension fits within max_dimension.
+    Preserves aspect ratio.
+    
+    Returns:
+        - PIL.Image: Resized or copied image
+        - bool: True if the image was resized, False otherwise
+    """
+    if not enabled:
         return image.copy(), False
 
-    scale = max_dimension / largest_dimension
+    width, height = image.size
+    longest_dimension = max(width, height)
+
+    if longest_dimension <= max_dimension:
+        return image.copy(), False
+
+    scale = max_dimension / longest_dimension
     new_size = (
         max(1, round(width * scale)),
         max(1, round(height * scale)),
@@ -81,168 +104,203 @@ def array_to_pil(array: np.ndarray) -> Image.Image:
     return Image.fromarray(clipped, mode="RGB")
 
 
-def encode_image(
+def compress_storage(
     image: Image.Image,
+    original_size_bytes: int,
     output_format: str,
-    *,
-    quality: int = 85,
-    png_compression_level: int = 6,
+    initial_quality: int = 85,
     optimize: bool = True,
-) -> bytes:
-    """Encode a Pillow image into bytes using the requested output format."""
-    buffer = BytesIO()
-    normalized_format = _normalize_format(output_format)
+    K: int = 16,
+) -> tuple[bytes, int, int, bool]:
+    """
+    Compress the image using Pillow.
+    - PNG: use palette mode (P mode) if K <= 256.
+    - JPEG/WEBP: use optimize=True, progressive=True (JPEG only), and adjustable quality.
+      Automatically reduce quality down to 50 if needed until compressed size < original size.
+    
+    Returns:
+        - bytes: Compressed image bytes
+        - int: Compressed file size in bytes
+        - int: Final quality level used
+        - bool: True if the compressed file size is smaller than the original file size
+    """
+    output_format = _normalize_format(output_format)
+    
+    if output_format == "PNG":
+        buffer = io.BytesIO()
+        if K <= 256:
+            # PNG palette mode
+            # Convert to P mode using adaptive palette with K colors
+            palette_image = image.convert("P", palette=Image.Palette.ADAPTIVE, colors=max(2, min(256, K)))
+            palette_image.save(buffer, format="PNG", optimize=optimize)
+        else:
+            image.save(buffer, format="PNG", optimize=optimize)
+            
+        compressed_bytes = buffer.getvalue()
+        compressed_size = len(compressed_bytes)
+        was_successful = compressed_size < original_size_bytes
+        return compressed_bytes, compressed_size, 85, was_successful
 
-    save_kwargs = {
-        "format": normalized_format,
-        "optimize": optimize,
-    }
-
-    if normalized_format == "JPEG":
-        save_kwargs.update(
-            {
-                "quality": quality,
-                "progressive": True,
-            }
-        )
-        image = _ensure_rgb(image)
-    elif normalized_format == "PNG":
-        save_kwargs.update(
-            {
-                "compress_level": png_compression_level,
-            }
-        )
-
-    image.save(buffer, **save_kwargs)
-    return buffer.getvalue()
-
-
-def candidate_output_formats(preferred_format: str, has_transparency: bool) -> list[str]:
-    """Return output formats to test, starting with the preferred format."""
-    normalized_preferred = _normalize_format(preferred_format)
-
-    if normalized_preferred == "PNG":
-        candidates = ["PNG"]
-        if not has_transparency:
-            candidates.append("JPEG")
-        return candidates
-
-    if normalized_preferred == "JPEG":
-        candidates = ["JPEG"]
-        if has_transparency:
-            candidates.append("PNG")
-        return candidates
-
-    return [normalized_preferred]
+    # JPEG or WEBP
+    quality = initial_quality
+    progressive = (output_format == "JPEG")
+    
+    compressed_bytes = b""
+    compressed_size = 0
+    
+    while True:
+        buffer = io.BytesIO()
+        save_kwargs = {
+            "format": output_format,
+            "quality": quality,
+            "optimize": optimize,
+        }
+        if progressive:
+            save_kwargs["progressive"] = True
+            
+        image.save(buffer, **save_kwargs)
+        compressed_bytes = buffer.getvalue()
+        compressed_size = len(compressed_bytes)
+        
+        # Stop loop if size is smaller than original OR we've hit minimum quality limit (50)
+        if compressed_size < original_size_bytes or quality <= 50:
+            break
+            
+        quality -= 5
+        quality = max(50, quality)
+        
+    was_successful = compressed_size < original_size_bytes
+    return compressed_bytes, compressed_size, quality, was_successful
 
 
-def file_size_to_string(size_bytes: int) -> str:
+def save_image(
+    image: Image.Image,
+    filename: str,
+    original_size_bytes: int,
+    output_format: str,
+    quality: int = 85,
+    optimize: bool = True,
+    K: int = 16,
+) -> tuple[str, bytes, int, int, bool]:
+    """
+    Save the compressed image to outputs directory.
+    
+    Returns:
+        - str: Absolute path of the saved file
+        - bytes: Saved image bytes
+        - int: Saved size in bytes
+        - int: Final quality used
+        - bool: True if file size is smaller than original
+    """
+    os.makedirs("outputs", exist_ok=True)
+    path = os.path.join("outputs", filename)
+
+    compressed_bytes, compressed_size, final_quality, was_successful = compress_storage(
+        image=image,
+        original_size_bytes=original_size_bytes,
+        output_format=output_format,
+        initial_quality=quality,
+        optimize=optimize,
+        K=K,
+    )
+
+    with open(path, "wb") as f:
+        f.write(compressed_bytes)
+
+    return os.path.abspath(path), compressed_bytes, compressed_size, final_quality, was_successful
+
+
+def get_unique_colors(image_array: np.ndarray) -> int:
+    """Count unique RGB colors in an image array."""
+    pixels = image_array.reshape(-1, image_array.shape[-1])
+    # Clip and convert to uint8 for reliable color comparison
+    pixels_uint8 = np.clip(pixels, 0, 255).astype(np.uint8)
+    return int(np.unique(pixels_uint8, axis=0).shape[0])
+
+
+def format_size(size_bytes: int) -> str:
     """Format a byte size using a human-readable unit."""
     if size_bytes < 1024:
         return f"{size_bytes} B"
-
     size = float(size_bytes)
     for unit in ["KB", "MB", "GB"]:
         size /= 1024.0
         if size < 1024.0 or unit == "GB":
             return f"{size:.2f} {unit}"
-
     return f"{size_bytes} B"
 
 
-def unique_color_count(image_array: np.ndarray) -> int:
-    """Count unique RGB colors in a processed image array."""
-    pixels = image_array.reshape(-1, image_array.shape[-1])
-    return int(np.unique(pixels, axis=0).shape[0])
-
-
-def load_image(image_path):
+def calculate_metrics(
+    original_array: np.ndarray,
+    compressed_array: np.ndarray,
+    original_size_bytes: int,
+    compressed_size_bytes: int,
+    elapsed_seconds: float,
+) -> dict:
     """
-    Load an image from disk and convert it to RGB float32 data.
+    Calculate comparative compression metrics.
     """
-    with Image.open(image_path) as image:
-        rgb_image = _ensure_rgb(image)
+    original_colors = get_unique_colors(original_array)
+    compressed_colors = get_unique_colors(compressed_array)
+    
+    reduction_pct = 0.0
+    if original_size_bytes > 0:
+        reduction_pct = ((original_size_bytes - compressed_size_bytes) / original_size_bytes) * 100
+        
+    storage_saved = max(0, original_size_bytes - compressed_size_bytes)
+    
+    return {
+        "original_size": original_size_bytes,
+        "compressed_size": compressed_size_bytes,
+        "reduction_pct": reduction_pct,
+        "storage_saved": storage_saved,
+        "original_colors": original_colors,
+        "compressed_colors": compressed_colors,
+        "elapsed_seconds": round(elapsed_seconds, 2),
+    }
 
-    return np.asarray(rgb_image, dtype=np.float32)
 
-
-def display_image(image, title="Image"):
+def run_kmeans_with_progress(
+    image_array: np.ndarray,
+    K: int,
+    max_iters: int = 20,
+    tolerance: float = 1e-4,
+    progress_callback=None,
+) -> tuple[np.ndarray, np.ndarray, dict]:
     """
-    Display an image.
+    Runs K-Means clustering step-by-step and updates a progress callback.
+    Wraps the core functions of kmeans.py exactly without modifying the file.
+    
+    Returns:
+        - np.ndarray: Final centroids
+        - np.ndarray: Pixel assignment labels
+        - dict: Run statistics
     """
-    plt.figure(figsize=(6, 6))
-    plt.imshow(image)
-    plt.title(title)
-    plt.axis("off")
-    plt.show()
+    centroids = init_centroids(K, image_array)
+    iterations = 0
+    converged = False
+    labels = None
 
+    for i in range(max_iters):
+        if progress_callback:
+            progress_callback(i, max_iters)
+            
+        labels = assign_clusters(image_array, centroids)
+        new_centroids = update_centroids(image_array, labels, K)
+        iterations = i + 1
 
-def compare_images(original, compressed):
-    """
-    Display original and compressed images side by side.
-    """
-    plt.figure(figsize=(12, 6))
+        if np.allclose(centroids, new_centroids, atol=tolerance):
+            centroids = new_centroids
+            converged = True
+            break
 
-    plt.subplot(1, 2, 1)
-    plt.imshow(original)
-    plt.title("Original Image")
-    plt.axis("off")
+        centroids = new_centroids
 
-    plt.subplot(1, 2, 2)
-    plt.imshow(compressed)
-    plt.title("Compressed Image")
-    plt.axis("off")
+    if progress_callback:
+        progress_callback(max_iters, max_iters)
 
-    plt.tight_layout()
-    plt.show()
-
-
-def save_image(
-    image,
-    filename="compressed_image.png",
-    *,
-    output_format: str | None = None,
-    quality: int = 85,
-    png_compression_level: int = 6,
-    optimize: bool = True,
-):
-    """
-    Save a compressed image inside outputs folder using Pillow encoding.
-    """
-    import os
-
-    os.makedirs("outputs", exist_ok=True)
-
-    path = os.path.join("outputs", filename)
-    pil_image = image if isinstance(image, Image.Image) else array_to_pil(np.asarray(image))
-    normalized_format = _normalize_format(output_format, filename)
-
-    encoded_bytes = encode_image(
-        pil_image,
-        normalized_format,
-        quality=quality,
-        png_compression_level=png_compression_level,
-        optimize=optimize,
-    )
-
-    with open(path, "wb") as file_handle:
-        file_handle.write(encoded_bytes)
-
-    return path
-
-
-def calculate_compression(original, compressed):
-    """
-    Calculate number of unique colors before and after compression.
-    """
-    original_colors = len(np.unique(original.reshape(-1, 3), axis=0))
-    compressed_colors = len(np.unique(compressed.reshape(-1, 3), axis=0))
-
-    return original_colors, compressed_colors
-
-
-def execution_time(start_time, end_time):
-    """
-    Returns execution time.
-    """
-    return round(end_time - start_time, 2)
+    return centroids, labels, {
+        "iterations": iterations,
+        "converged": converged,
+        "tolerance": tolerance,
+    }
