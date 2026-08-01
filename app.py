@@ -17,289 +17,232 @@ from utils import (
 
 
 def apply_custom_theme() -> None:
-    """Inject a light mode glassmorphism SaaS style matching Linear/Raycast/Stripe visual systems."""
+    """Inject premium dark SaaS dashboard styling and layout overrides."""
     st.markdown(
         """
         <style>
             @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 
-            /* Global Styles Reset to Soft Light Mode Gradient */
+            /* Global styles */
             html, body, [data-testid="stAppViewContainer"] {
-                background: linear-gradient(135deg, #f4f6fc 0%, #fafbff 50%, #edf1fd 100%) !important;
-                color: #1e1b4b !important;
-                font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
+                background-color: #080a11;
+                color: #e2e8f0;
+                font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
             }
 
-            [data-testid="stHeader"] {
-                background-color: transparent !important;
-            }
-
-            /* Hide Sidebar completely to build horizontal layouts */
+            /* Sidebar Styling */
             [data-testid="stSidebar"] {
-                display: none !important;
+                background-color: #0e1220;
+                border-right: 1px solid rgba(255, 255, 255, 0.05);
             }
 
-            /* Hero Title Header Styling */
-            .hero-container {
-                text-align: center;
-                padding: 2.5rem 1rem 1.5rem 1rem;
-                margin-bottom: 1rem;
-            }
-
-            .hero-logo-box {
-                display: inline-flex;
-                background: linear-gradient(135deg, #6366f1 0%, #ec4899 100%);
-                width: 54px;
-                height: 54px;
-                border-radius: 16px;
-                justify-content: center;
-                align-items: center;
+            [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] h3 {
+                color: #f8fafc;
+                font-size: 1.15rem;
+                font-weight: 700;
+                padding-bottom: 0.5rem;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+                margin-top: 1rem;
                 margin-bottom: 1.25rem;
-                box-shadow: 0 8px 24px rgba(99, 102, 241, 0.3);
-                transform: rotate(-5deg);
-                transition: transform 0.3s ease;
-            }
-            
-            .hero-logo-box:hover {
-                transform: rotate(5deg) scale(1.05);
+                letter-spacing: -0.01em;
             }
 
-            .hero-title {
-                font-size: 3rem;
-                font-weight: 800;
-                margin: 0;
-                background: linear-gradient(90deg, #4f46e5, #ec4899);
-                -webkit-background-clip: text;
-                -webkit-text-fill-color: transparent;
-                letter-spacing: -0.03em;
-                line-height: 1.1;
+            [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] h4 {
+                color: #f1f5f9;
+                font-size: 0.95rem;
+                font-weight: 600;
+                margin-top: 1rem;
+                margin-bottom: 0.75rem;
             }
 
-            .hero-subtitle {
-                font-size: 1.05rem;
-                color: #64748b;
-                margin-top: 0.5rem;
-                margin-bottom: 0;
-                font-weight: 400;
-                max-width: 600px;
-                margin-left: auto;
-                margin-right: auto;
-            }
-
-            /* Glassmorphic border containers */
-            div[data-testid="stVerticalBlockBorderWrapper"] {
-                background: rgba(255, 255, 255, 0.65) !important;
-                backdrop-filter: blur(16px) !important;
-                -webkit-backdrop-filter: blur(16px) !important;
-                border: 1px solid rgba(255, 255, 255, 0.5) !important;
-                border-radius: 20px !important;
-                padding: 1.5rem !important;
-                box-shadow: 0 10px 30px rgba(99, 102, 241, 0.03) !important;
-                transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease !important;
-            }
-
-            div[data-testid="stVerticalBlockBorderWrapper"]:hover {
-                transform: translateY(-3px) !important;
-                box-shadow: 0 15px 35px rgba(99, 102, 241, 0.06) !important;
-                border-color: rgba(99, 102, 241, 0.15) !important;
-            }
-
-            /* Custom drag & drop file uploader overrides */
-            [data-testid="stFileUploader"] {
-                background: rgba(255, 255, 255, 0.65) !important;
-                backdrop-filter: blur(16px) !important;
-                -webkit-backdrop-filter: blur(16px) !important;
-                border: 1px solid rgba(255, 255, 255, 0.5) !important;
-                border-radius: 20px !important;
-                padding: 1.5rem !important;
-                box-shadow: 0 10px 30px rgba(99, 102, 241, 0.03) !important;
-                max-width: 650px !important;
-                margin: 0 auto 1.5rem auto !important;
-                transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease !important;
-            }
-
-            [data-testid="stFileUploader"]:hover {
-                transform: translateY(-2px) !important;
-                box-shadow: 0 15px 35px rgba(99, 102, 241, 0.06) !important;
-                border-color: rgba(99, 102, 241, 0.15) !important;
-            }
-
-            [data-testid="stFileUploaderDropzone"] {
-                background-color: transparent !important;
-            }
-
-            /* Preview image formatting inside symmetrical cards */
-            div[data-testid="stImage"] img {
-                max-height: 300px !important;
-                object-fit: contain !important;
-                border-radius: 12px !important;
-                border: 1px solid rgba(255, 255, 255, 0.5) !important;
-                margin: 0 auto !important;
-                display: block !important;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02) !important;
-            }
-
-            /* Collapsible panel override (advanced settings) */
+            /* Sidebar Expander Customization */
             div[data-testid="stExpander"] {
-                background-color: rgba(255, 255, 255, 0.4) !important;
-                border: 1px solid rgba(255, 255, 255, 0.5) !important;
-                border-radius: 12px !important;
-                box-shadow: 0 4px 15px rgba(99, 102, 241, 0.01) !important;
+                background-color: #12182c !important;
+                border: 1px solid rgba(255, 255, 255, 0.05) !important;
+                border-radius: 8px !important;
                 margin-top: 1rem;
             }
 
-            /* Metric Cards Grid Layout */
+            /* Header Section Styling */
+            .header-container {
+                background: linear-gradient(135deg, #13142e 0%, #080a11 100%);
+                border: 1px solid rgba(99, 102, 241, 0.12);
+                border-radius: 12px;
+                padding: 1.5rem 2rem;
+                margin-bottom: 1.5rem;
+                box-shadow: 0 4px 25px rgba(0, 0, 0, 0.2);
+                text-align: center;
+            }
+
+            .header-title {
+                font-size: 2.3rem;
+                font-weight: 800;
+                margin: 0;
+                background: linear-gradient(90deg, #38bdf8, #818cf8);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                letter-spacing: -0.02em;
+            }
+
+            .header-subtitle {
+                font-size: 0.95rem;
+                color: #94a3b8;
+                margin-top: 0.4rem;
+                margin-bottom: 0;
+                font-weight: 400;
+            }
+
+            /* Image View Cards container styling */
+            div[data-testid="stVerticalBlockBorderWrapper"] {
+                background-color: #0f1425 !important;
+                border: 1px solid rgba(255, 255, 255, 0.06) !important;
+                border-radius: 12px !important;
+                padding: 1.25rem !important;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25) !important;
+                transition: transform 0.2s ease, border-color 0.2s ease;
+                min-height: 480px !important;
+                display: flex !important;
+                flex-direction: column !important;
+                justify-content: space-between !important;
+            }
+
+            div[data-testid="stVerticalBlockBorderWrapper"]:hover {
+                border-color: rgba(99, 102, 241, 0.3) !important;
+            }
+
+            /* Enforce maximum sizing for internal preview images */
+            div[data-testid="stImage"] img {
+                max-height: 320px !important;
+                object-fit: contain !important;
+                border-radius: 6px !important;
+                border: 1px solid rgba(255, 255, 255, 0.04) !important;
+                margin: 0 auto !important;
+                display: block !important;
+            }
+
+            /* Metrics Grid Layout */
             .metrics-container {
                 display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-                gap: 1.25rem;
-                margin-top: 1.5rem;
-                margin-bottom: 2rem;
+                grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+                gap: 1rem;
+                margin-top: 1rem;
+                margin-bottom: 1.5rem;
             }
 
             .metric-card {
-                background: rgba(255, 255, 255, 0.7);
-                backdrop-filter: blur(10px);
-                border: 1px solid rgba(255, 255, 255, 0.6);
-                border-radius: 16px;
-                padding: 1.25rem;
-                display: flex;
-                align-items: center;
-                gap: 1rem;
-                box-shadow: 0 8px 24px rgba(99, 102, 241, 0.02);
-                transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
+                background-color: #12182d;
+                border: 1px solid rgba(255, 255, 255, 0.05);
+                border-radius: 10px;
+                padding: 1rem;
+                text-align: center;
+                box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.25);
+                transition: transform 0.2s ease, border-color 0.2s ease;
             }
 
             .metric-card:hover {
-                transform: translateY(-4px);
-                border-color: rgba(99, 102, 241, 0.25);
-                box-shadow: 0 12px 30px rgba(99, 102, 241, 0.05);
+                transform: translateY(-2px);
+                border-color: rgba(99, 102, 241, 0.3);
             }
 
-            .metric-icon-box {
-                width: 44px;
-                height: 44px;
-                border-radius: 12px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(236, 72, 153, 0.08) 100%);
-                color: #4f46e5;
-                flex-shrink: 0;
-            }
-
-            .metric-info {
-                display: flex;
-                flex-direction: column;
-                text-align: left;
-            }
-
-            .metric-value {
-                font-size: 1.25rem;
-                font-weight: 700;
-                color: #1e1b4b;
-                line-height: 1.2;
-            }
-
-            .metric-label {
-                font-size: 0.72rem;
-                color: #64748b;
-                font-weight: 600;
-                margin-top: 0.1rem;
+            .metric-card-label {
+                font-size: 0.68rem;
                 text-transform: uppercase;
-                letter-spacing: 0.04em;
-            }
-
-            .metric-sub {
-                font-size: 0.75rem;
+                letter-spacing: 0.08em;
+                color: #94a3b8;
+                margin-bottom: 0.4rem;
                 font-weight: 600;
-                color: #10b981;
-                margin-top: 0.15rem;
             }
 
-            .metric-sub.negative {
-                color: #ef4444;
+            .metric-card-value {
+                font-size: 1.3rem;
+                font-weight: 700;
+                color: #ffffff;
             }
 
-            .metric-sub.neutral {
-                color: #8b9bb4;
+            .metric-card-sub {
+                font-size: 0.78rem;
+                color: #34d399;
+                margin-top: 0.3rem;
+                font-weight: 500;
             }
 
-            /* Compress Trigger Button Styling */
-            div.stButton > button:first-child {
-                background: linear-gradient(135deg, #4f46e5 0%, #ec4899 100%) !important;
-                color: white !important;
-                border: none !important;
-                border-radius: 9999px !important;
-                padding: 0.75rem 2rem !important;
-                font-weight: 700 !important;
-                font-size: 1rem !important;
-                transition: all 0.3s ease !important;
-                box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3) !important;
-                width: 100% !important;
-                letter-spacing: 0.01em !important;
+            .metric-card-sub.negative {
+                color: #f87171;
             }
 
-            div.stButton > button:first-child:hover {
-                transform: translateY(-2px) !important;
-                box-shadow: 0 8px 24px rgba(99, 102, 241, 0.45) !important;
+            .metric-card-sub.neutral {
+                color: #64748b;
             }
 
-            /* Download Button Styling */
-            div.stDownloadButton > button:first-child {
-                background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
-                color: white !important;
-                border: none !important;
-                border-radius: 9999px !important;
-                padding: 0.85rem 2.5rem !important;
-                font-weight: 700 !important;
-                font-size: 1.05rem !important;
-                transition: all 0.3s ease !important;
-                box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3) !important;
-                width: 100% !important;
-            }
-
-            div.stDownloadButton > button:first-child:hover {
-                transform: translateY(-2px) !important;
-                box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4) !important;
-            }
-
-            /* Status progress message style */
+            /* Status Update Message Styling */
             .status-msg {
-                font-size: 1rem;
-                font-weight: 600;
-                color: #4f46e5;
+                font-size: 0.95rem;
+                font-weight: 500;
+                color: #818cf8;
                 margin-bottom: 0.5rem;
                 text-align: center;
             }
 
-            /* Footer Styling */
-            .footer-container {
-                text-align: center;
-                padding: 2.5rem 1rem 1.5rem 1rem;
-                border-top: 1px solid rgba(99, 102, 241, 0.08);
-                margin-top: 4rem;
-                color: #64748b;
-                font-size: 0.85rem;
+            /* Primary Button Styling */
+            div.stButton > button:first-child {
+                background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%);
+                color: white;
+                border: none;
+                border-radius: 8px;
+                padding: 0.7rem 1.5rem;
+                font-weight: 600;
+                font-size: 0.95rem;
+                transition: all 0.3s ease;
+                box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3);
+                width: 100%;
             }
 
-            .footer-links {
-                display: flex;
-                justify-content: center;
-                gap: 1.5rem;
-                margin-top: 0.5rem;
+            div.stButton > button:first-child:hover {
+                background: linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%);
+                transform: translateY(-1px);
+                box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
             }
 
-            .footer-links a {
-                color: #4f46e5;
-                text-decoration: none;
-                font-weight: 500;
-                transition: color 0.2s ease;
+            /* Download Button Styling */
+            div.stDownloadButton > button:first-child {
+                background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+                color: white;
+                border: none;
+                border-radius: 8px;
+                padding: 0.8rem 2rem;
+                font-weight: 700;
+                font-size: 1.05rem;
+                transition: all 0.3s ease;
+                box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+                width: 100%;
             }
 
-            .footer-links a:hover {
-                color: #ec4899;
+            div.stDownloadButton > button:first-child:hover {
+                background: linear-gradient(90deg, #059669 0%, #047857 100%);
+                transform: translateY(-1px);
+                box-shadow: 0 6px 20px rgba(16, 185, 129, 0.45);
             }
+
+            /* Drag & Drop File Uploader Override */
+            [data-testid="stFileUploader"] {
+                background-color: #0f1425;
+                border: 2px dashed rgba(99, 102, 241, 0.25);
+                border-radius: 12px;
+                padding: 1.25rem;
+                margin-bottom: 1.5rem;
+                transition: border-color 0.3s ease;
+            }
+            [data-testid="stFileUploader"]:hover {
+                border-color: #6366f1;
+            }
+            [data-testid="stFileUploaderDropzone"] {
+                background-color: transparent !important;
+            }
+
+            /* Hide Default Streamlit Overhead Elements */
+            #MainMenu {visibility: hidden;}
+            footer {visibility: hidden;}
+            header {background-color: transparent !important;}
         </style>
         """,
         unsafe_allow_html=True,
@@ -307,59 +250,29 @@ def apply_custom_theme() -> None:
 
 
 def main() -> None:
-    # 1. Page Configuration (Initial sidebar state set to collapsed)
+    # 1. Page Config Setup
     st.set_page_config(
-        page_title="K-Compress",
+        page_title="K-Compress - Image Compression Tool",
         layout="wide",
-        initial_sidebar_state="collapsed",
+        initial_sidebar_state="expanded",
     )
 
     apply_custom_theme()
 
-    # 2. Hero Section (Logo, Title, Subtitle)
+    # 2. Main Header
     st.markdown(
         """
-        <div class="hero-container">
-            <div class="hero-logo-box">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                    <circle cx="9" cy="9" r="2"></circle>
-                    <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path>
-                </svg>
-            </div>
-            <h1 class="hero-title">K-Compress</h1>
-            <p class="hero-subtitle">Modern vector quantization and image storage optimizer</p>
+        <div class="header-container">
+            <h1 class="header-title">K-Compress</h1>
+            <p class="header-subtitle">Optimized K-Means color quantization engine and high-efficiency image compression</p>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
-    # 3. Upload Card Illustration Block & File Uploader
-    st.markdown(
-        """
-        <div style="text-align: center; max-width: 650px; margin: 0 auto -0.5rem auto;">
-            <div style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(236, 72, 153, 0.08) 100%); width: 70px; height: 70px; border-radius: 50%; display: inline-flex; justify-content: center; align-items: center; margin-bottom: 1rem; box-shadow: 0 8px 24px rgba(99, 102, 241, 0.08);">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="url(#upload-grad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <defs>
-                        <linearGradient id="upload-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stop-color="#4f46e5" />
-                            <stop offset="100%" stop-color="#ec4899" />
-                        </linearGradient>
-                    </defs>
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                    <polyline points="17 8 12 3 7 8"></polyline>
-                    <line x1="12" y1="3" x2="12" y2="15"></line>
-                </svg>
-            </div>
-            <h3 style="color: #1e1b4b; font-size: 1.25rem; font-weight: 700; margin: 0 0 0.25rem 0;">Drag & drop your image here</h3>
-            <p style="color: #64748b; font-size: 0.88rem; margin: 0 0 0.5rem 0;">Supported formats: PNG, JPEG, WEBP</p>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
+    # 3. Handle File Upload immediately (Hierarchy step 3)
     uploaded_file = st.file_uploader(
-        "Upload image",
+        "Upload image (PNG, JPEG, WEBP)",
         type=["png", "jpg", "jpeg", "webp"],
         label_visibility="collapsed",
     )
@@ -390,14 +303,90 @@ def main() -> None:
             st.session_state["results"] = None
             st.session_state["last_run_params"] = None
 
+    # 4. Sidebar configuration (Compression Settings)
+    with st.sidebar:
+        st.markdown("### Compression Settings")
+        
+        st.markdown("#### Basic Settings")
+        k = st.slider(
+            "Number of Clusters (K)",
+            min_value=2,
+            max_value=256,
+            value=16,
+            step=1,
+            help="Number of clusters (colors) to generate.",
+        )
+        
+        # Disabled state for sidebar button if no image uploaded
+        is_disabled = (uploaded_file is None)
+        compress_clicked = st.button(
+            "Compress",
+            type="primary",
+            use_container_width=True,
+            disabled=is_disabled,
+            help="Upload an image to run compression." if is_disabled else "Start processing execution.",
+        )
+
+        # Advanced Settings (collapsed by default inside expander)
+        with st.expander("Advanced Settings", expanded=False):
+            max_iters = st.slider(
+                "Maximum Iterations",
+                min_value=5,
+                max_value=100,
+                value=20,
+                step=5,
+                help="Maximum clustering iterations before halting.",
+            )
+            resize_enabled = st.checkbox(
+                "Resize Image",
+                value=True,
+                help="Resize large dimensions before processing.",
+            )
+            if resize_enabled:
+                max_dimension = st.slider(
+                    "Maximum Dimension",
+                    min_value=256,
+                    max_value=2048,
+                    value=1500,
+                    step=64,
+                    help="Resize longest side to fit within this value.",
+                )
+            else:
+                max_dimension = 1500
+
+            output_format = st.selectbox(
+                "Output Format",
+                options=["PNG", "JPEG", "WEBP"],
+                key="output_format_sel",
+                help="Select target file format for output representation.",
+            )
+
+            if output_format in ["JPEG", "WEBP"]:
+                quality_val = st.slider(
+                    "Quality",
+                    min_value=10,
+                    max_value=100,
+                    value=85,
+                    step=5,
+                    help="Compression quality level.",
+                )
+            else:
+                quality_val = 85
+
+            optimize_output = st.checkbox(
+                "Optimize Output",
+                value=True,
+                help="Enables PIL optimize and JPEG progressive settings.",
+            )
+
     # Empty State when no upload
     if not uploaded_file:
         st.markdown(
             """
-            <div class="glass-card" style="text-align: center; max-width: 650px; margin: 1rem auto; padding: 2rem 1.5rem;">
-                <h3 style="color: #4f46e5; margin-top: 0; margin-bottom: 0.5rem; font-weight: 700;">Awaiting Source File</h3>
-                <p style="color: #64748b; max-width: 500px; margin: 0 auto; font-size: 0.92rem;">
-                    Load an image above and configure parameters to compress your file using vector color clustering.
+            <div class="dashboard-card" style="text-align: center; padding: 3rem 2rem;">
+                <h3 style="color: #818cf8; margin-bottom: 0.5rem;">Ready to Begin</h3>
+                <p style="color: #94a3b8; max-width: 500px; margin: 0 auto;">
+                    Select an image from your device and click "Compress" in the sidebar panel to run K-Means color quantization.
                 </p>
             </div>
             """,
@@ -412,79 +401,6 @@ def main() -> None:
         st.error(f"Failed to load image: {str(e)}")
         return
 
-    # 4. Compression Controls - Horizontal Main Grid Section
-    # Wrapped inside a native container styled as a frosted card
-    with st.container(border=True):
-        st.markdown("<div style='font-weight: 800; font-size: 1.15rem; color: #1e1b4b; margin-bottom: 0.8rem; letter-spacing: -0.01em;'>Compression Parameters</div>", unsafe_allow_html=True)
-        col_ctrl1, col_ctrl2, col_ctrl3 = st.columns([2, 1, 1])
-        
-        with col_ctrl1:
-            k = st.slider(
-                "Number of Clusters (K)",
-                min_value=2,
-                max_value=256,
-                value=16,
-                step=1,
-                help="Maximum unique colors in the output image.",
-            )
-            
-        with col_ctrl2:
-            output_format = st.selectbox(
-                "Output Format",
-                options=["PNG", "JPEG", "WEBP"],
-                key="output_format_sel",
-                help="Select target file format for output representation.",
-            )
-            
-        with col_ctrl3:
-            st.markdown('<div style="height: 28px;"></div>', unsafe_allow_html=True)
-            compress_clicked = st.button("Compress", type="primary", use_container_width=True)
-
-        # Advanced settings panel collapsible inside the controls box
-        with st.expander("Advanced Settings", expanded=False):
-            max_iters = st.slider(
-                "Maximum Iterations",
-                min_value=5,
-                max_value=100,
-                value=20,
-                step=5,
-                help="Maximum iterations for K-Means iterations.",
-            )
-            resize_enabled = st.checkbox(
-                "Resize Image",
-                value=True,
-                help="Auto-resize image width/height before quantizing.",
-            )
-            if resize_enabled:
-                max_dimension = st.slider(
-                    "Maximum Dimension",
-                    min_value=256,
-                    max_value=2048,
-                    value=1500,
-                    step=64,
-                    help="Limit the longest side of the image to fit this boundary.",
-                )
-            else:
-                max_dimension = 1500
-                
-            if output_format in ["JPEG", "WEBP"]:
-                quality_val = st.slider(
-                    "Quality",
-                    min_value=10,
-                    max_value=100,
-                    value=85,
-                    step=5,
-                    help="Compression quality index value.",
-                )
-            else:
-                quality_val = 85
-
-            optimize_output = st.checkbox(
-                "Optimize Output",
-                value=True,
-                help="Apply progressive scans and output size optimization routines.",
-            )
-
     # Trigger processing sequence
     if compress_clicked:
         start_time = time.perf_counter()
@@ -493,7 +409,7 @@ def main() -> None:
         progress_bar = st.progress(0.0)
 
         try:
-            # Step 1: Loading image...
+            # Step 1: Loading image
             status_placeholder.markdown("<div class='status-msg'>Loading image...</div>", unsafe_allow_html=True)
             time.sleep(0.05)
             progress_bar.progress(0.1)
@@ -510,7 +426,7 @@ def main() -> None:
             pixel_count = image_array.shape[0] * image_array.shape[1]
             effective_k = min(k, pixel_count)
 
-            # Step 2: Running K-Means...
+            # Step 2: Running K-Means
             status_placeholder.markdown("<div class='status-msg'>Running K-Means...</div>", unsafe_allow_html=True)
 
             def progress_callback(curr_iter, total_iters):
@@ -528,7 +444,7 @@ def main() -> None:
                 progress_callback=progress_callback,
             )
 
-            # Step 3: Optimizing image...
+            # Step 3: Optimizing image
             status_placeholder.markdown("<div class='status-msg'>Optimizing image...</div>", unsafe_allow_html=True)
             compressed_array = compress_image(labels, centroids)
             compressed_image = array_to_pil(compressed_array)
@@ -551,7 +467,7 @@ def main() -> None:
             )
             progress_bar.progress(0.95)
 
-            # Step 4: Preparing download...
+            # Step 4: Preparing download
             status_placeholder.markdown("<div class='status-msg'>Preparing download...</div>", unsafe_allow_html=True)
             elapsed_seconds = time.perf_counter() - start_time
 
@@ -599,12 +515,12 @@ def main() -> None:
             if "progress_bar" in locals():
                 progress_bar.empty()
 
-    # 5. Render output comparison cards
+    # 5. Render output comparison cards (Hierarchy step 4)
     results = st.session_state.get("results")
     last_params = st.session_state.get("last_run_params")
 
     if results:
-        # Check if configurations changed
+        # Check if sidebar configurations changed
         params_changed = False
         if last_params:
             if (
@@ -619,16 +535,16 @@ def main() -> None:
                 params_changed = True
 
         if params_changed:
-            st.info("Settings changed since last execution. Click 'Compress' to synchronize new values.")
+            st.info("Settings altered. Click the sidebar 'Compress' button to re-run and sync changes.")
 
         metrics = results["metrics"]
         reduction_pct = metrics["reduction_pct"]
         saved_bytes = metrics["storage_saved"]
 
-        # Alert state banners
+        # Alert banners
         if results["was_successful"]:
             st.success(
-                f"Compression successful. Size reduced by {format_size(saved_bytes)} ({reduction_pct:.1f}% savings)."
+                f"Compression successful. Saved {format_size(saved_bytes)} ({reduction_pct:.1f}% reduction)."
             )
         else:
             st.warning(
@@ -639,7 +555,7 @@ def main() -> None:
         if results["was_resized"]:
             st.info(
                 f"Image resized from {results['original_dimensions'][0]}x{results['original_dimensions'][1]} "
-                f"to {results['compressed_dimensions'][0]}x{results['compressed_dimensions'][1]} before clustering."
+                f"to {results['compressed_dimensions'][0]}x{results['compressed_dimensions'][1]} before quantization."
             )
 
         if has_transparency:
@@ -647,7 +563,7 @@ def main() -> None:
 
         if results["effective_k"] < k:
             st.warning(
-                f"Cluster count K auto-reduced to {results['effective_k']} due to pixel resolution capacity."
+                f"Cluster count K auto-reduced to {results['effective_k']} due to total pixel capacity constraints."
             )
 
         # Image view cards side by side (Identical height cards)
@@ -658,8 +574,8 @@ def main() -> None:
                 st.markdown(
                     f"""
                     <div style="text-align: center; margin-bottom: 0.5rem;">
-                        <div style="font-weight: 700; font-size: 1.05rem; color: #1e1b4b; text-transform: uppercase; letter-spacing: 0.05em;">Original</div>
-                        <div style="font-size: 0.82rem; color: #64748b; margin-top: 0.25rem;">
+                        <div style="font-weight: 700; font-size: 1.05rem; color: #ffffff; text-transform: uppercase; letter-spacing: 0.05em;">Original</div>
+                        <div style="font-size: 0.82rem; color: #94a3b8; margin-top: 0.25rem;">
                             Resolution: {results['original_dimensions'][0]} × {results['original_dimensions'][1]}<br>
                             Size: {format_size(metrics["original_size"])} &middot; Format: {source_format}
                         </div>
@@ -674,8 +590,8 @@ def main() -> None:
                 st.markdown(
                     f"""
                     <div style="text-align: center; margin-bottom: 0.5rem;">
-                        <div style="font-weight: 700; font-size: 1.05rem; color: #4f46e5; text-transform: uppercase; letter-spacing: 0.05em;">Compressed</div>
-                        <div style="font-size: 0.82rem; color: #64748b; margin-top: 0.25rem;">
+                        <div style="font-weight: 700; font-size: 1.05rem; color: #818cf8; text-transform: uppercase; letter-spacing: 0.05em;">Compressed</div>
+                        <div style="font-size: 0.82rem; color: #94a3b8; margin-top: 0.25rem;">
                             Resolution: {results['compressed_dimensions'][0]} × {results['compressed_dimensions'][1]}<br>
                             Size: {format_size(metrics["compressed_size"])} &middot; Format: {output_format}
                         </div>
@@ -685,157 +601,70 @@ def main() -> None:
                 )
                 st.image(results["compressed_image"], use_container_width=True)
 
-        # 6. Comparative Metric Card Grid
+        # 6. Comparative Metric Card Grid (Hierarchy step 5)
         st.markdown("### Performance & Compression Metrics")
 
         orig_size_str = format_size(metrics["original_size"])
         comp_size_str = format_size(metrics["compressed_size"])
         reduction_str = f"{reduction_pct:.1f}%"
-        saved_str = format_size(saved_bytes)
         orig_colors_str = f'{metrics["original_colors"]:,}'
         comp_colors_str = f'{metrics["compressed_colors"]:,}'
         time_str = f'{metrics["elapsed_seconds"]:.2f}s'
-        
-        orig_dims_str = f"{results['original_dimensions'][0]} × {results['original_dimensions'][1]}"
-        comp_dims_str = f"{results['compressed_dimensions'][0]} × {results['compressed_dimensions'][1]}"
 
-        savings_class = "metric-sub" if results["was_successful"] else "metric-sub negative"
-        savings_label = "Saved" if results["was_successful"] else "Increase"
-        
         if results["was_successful"]:
+            saved_str = format_size(saved_bytes)
             reduction_sub = f"{reduction_pct:.1f}% savings"
+            savings_class = ""
+            savings_label = "Saved"
         else:
             increase_bytes = abs(metrics["original_size"] - metrics["compressed_size"])
             saved_str = format_size(increase_bytes)
             reduction_sub = f"{abs(reduction_pct):.1f}% increase"
+            savings_class = "negative"
+            savings_label = "Increase"
 
-        # Grid HTML representing soft neumorphic cards with modern outline SVG icons
         metrics_html = f"""
         <div class="metrics-container">
-            <!-- Card 1: Storage Saved -->
             <div class="metric-card">
-                <div class="metric-icon-box">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
-                        <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
-                        <line x1="6" y1="6" x2="6.01" y2="6"></line>
-                        <line x1="6" y1="18" x2="6.01" y2="18"></line>
-                    </svg>
-                </div>
-                <div class="metric-info">
-                    <div class="metric-value">{saved_str}</div>
-                    <div class="metric-label">Storage Saved</div>
-                    <div class="{savings_class}">{savings_label}</div>
-                </div>
+                <div class="metric-card-label">Original Size</div>
+                <div class="metric-card-value">{orig_size_str}</div>
+                <div class="metric-card-sub neutral">Input file</div>
             </div>
-            
-            <!-- Card 2: Compression % -->
             <div class="metric-card">
-                <div class="metric-icon-box">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="23 18 13.5 8.5 8.5 13.5 1 6"></polyline>
-                        <polyline points="17 18 23 18 23 12"></polyline>
-                    </svg>
-                </div>
-                <div class="metric-info">
-                    <div class="metric-value">{reduction_str}</div>
-                    <div class="metric-label">Compression %</div>
-                    <div class="{savings_class}">{reduction_sub}</div>
-                </div>
+                <div class="metric-card-label">Compressed Size</div>
+                <div class="metric-card-value">{comp_size_str}</div>
+                <div class="metric-card-sub neutral">Output file</div>
             </div>
-            
-            <!-- Card 3: Execution Time -->
             <div class="metric-card">
-                <div class="metric-icon-box">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <polyline points="12 6 12 12 16 14"></polyline>
-                    </svg>
-                </div>
-                <div class="metric-info">
-                    <div class="metric-value">{time_str}</div>
-                    <div class="metric-label">Execution Time</div>
-                    <div class="metric-sub neutral">Duration</div>
-                </div>
+                <div class="metric-card-label">Compression %</div>
+                <div class="metric-card-value">{reduction_str}</div>
+                <div class="metric-card-sub {savings_class}">{reduction_sub}</div>
             </div>
-            
-            <!-- Card 4: Original Colors -->
             <div class="metric-card">
-                <div class="metric-icon-box">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 14.7255 3.09032 17.1962 4.85857 19C5.03345 19.1749 5.25367 19.3106 5.49653 19.3957C5.97839 19.5645 6.50284 19.4674 6.89949 19.14C7.5 18.64 8.5 18.64 9.10051 19.14C9.49716 19.4674 10.0216 19.5645 10.5035 19.3957C10.7463 19.3106 10.9666 19.1749 11.1414 19C11.6702 18.4712 12.3878 18.1065 13.1818 18.1065C13.9758 18.1065 14.6934 18.4712 15.2222 19L16.2929 17.9293C16.9229 17.3 17.9771 17.3 18.6071 17.9293L19.6778 19C20.6778 20 22 18 22 12"></path>
-                        <circle cx="7.5" cy="10.5" r="1.5"></circle>
-                        <circle cx="11.5" cy="7.5" r="1.5"></circle>
-                        <circle cx="16.5" cy="9.5" r="1.5"></circle>
-                    </svg>
-                </div>
-                <div class="metric-info">
-                    <div class="metric-value">{orig_colors_str}</div>
-                    <div class="metric-label">Original Colors</div>
-                    <div class="metric-sub neutral">Before</div>
-                </div>
+                <div class="metric-card-label">Storage Saved</div>
+                <div class="metric-card-value">{saved_str}</div>
+                <div class="metric-card-sub {savings_class}">{savings_label}</div>
             </div>
-            
-            <!-- Card 5: Compressed Colors -->
             <div class="metric-card">
-                <div class="metric-icon-box">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M15 4V2"></path>
-                        <path d="M15 16v-2"></path>
-                        <path d="M8 9h2"></path>
-                        <path d="M20 9h2"></path>
-                        <path d="M17.8 5.2l-1.4 1.4"></path>
-                        <path d="M7.6 15.4l-1.4 1.4"></path>
-                        <path d="M16.4 12.6l1.4 1.4"></path>
-                        <path d="M6.2 6.2l1.4-1.4"></path>
-                        <path d="M14 9a5 5 0 0 1-5 5"></path>
-                    </svg>
-                </div>
-                <div class="metric-info">
-                    <div class="metric-value">{comp_colors_str}</div>
-                    <div class="metric-label">Compressed Colors</div>
-                    <div class="metric-sub neutral">After (K)</div>
-                </div>
+                <div class="metric-card-label">Execution Time</div>
+                <div class="metric-card-value">{time_str}</div>
+                <div class="metric-card-sub neutral">Duration</div>
             </div>
-            
-            <!-- Card 6: Original Dimensions -->
             <div class="metric-card">
-                <div class="metric-icon-box">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="15 3 21 3 21 9"></polyline>
-                        <polyline points="9 21 3 21 3 15"></polyline>
-                        <line x1="21" y1="3" x2="14" y2="10"></line>
-                        <line x1="3" y1="21" x2="10" y2="14"></line>
-                    </svg>
-                </div>
-                <div class="metric-info">
-                    <div class="metric-value">{orig_dims_str}</div>
-                    <div class="metric-label">Original Dims</div>
-                    <div class="metric-sub neutral">Resolution</div>
-                </div>
+                <div class="metric-card-label">Original Colors</div>
+                <div class="metric-card-value">{orig_colors_str}</div>
+                <div class="metric-card-sub neutral">Before</div>
             </div>
-            
-            <!-- Card 7: Compressed Dimensions -->
             <div class="metric-card">
-                <div class="metric-icon-box">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="4 14 10 14 10 20"></polyline>
-                        <polyline points="20 10 14 10 14 4"></polyline>
-                        <line x1="14" y1="10" x2="21" y2="3"></line>
-                        <line x1="10" y1="14" x2="3" y2="21"></line>
-                    </svg>
-                </div>
-                <div class="metric-info">
-                    <div class="metric-value">{comp_dims_str}</div>
-                    <div class="metric-label">Compressed Dims</div>
-                    <div class="metric-sub neutral">Output size</div>
-                </div>
+                <div class="metric-card-label">Compressed Colors</div>
+                <div class="metric-card-value">{comp_colors_str}</div>
+                <div class="metric-card-sub neutral">After (K)</div>
             </div>
         </div>
         """
         st.markdown(metrics_html, unsafe_allow_html=True)
 
-        # 7. Prominent Download Button
+        # 7. Prominent Download Button (Hierarchy step 6)
         st.download_button(
             label="Download Compressed Image",
             data=results["compressed_bytes"],
@@ -843,23 +672,6 @@ def main() -> None:
             mime=f"image/{output_format.lower()}",
             use_container_width=True,
         )
-
-    # 8. Simple Footer
-    st.markdown(
-        """
-        <div class="footer-container">
-            <p><strong>K-Compress</strong> &middot; Optimized Image Quantization Engine</p>
-            <div class="footer-links">
-                <span>Version 2.1.0</span>
-                <span>&middot;</span>
-                <a href="https://github.com/bristi2006/ColorQuant-K-Means-Based-Image-Compression-Tool" target="_blank">GitHub Repository</a>
-                <span>&middot;</span>
-                <span>Author: Bristi</span>
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
 
 
 if __name__ == "__main__":
